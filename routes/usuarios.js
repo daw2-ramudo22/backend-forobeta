@@ -42,7 +42,7 @@ router.post('/login', async (req, res) => {
 // Registro de usuario
 router.post('/registro', async (req, res) => {
   try {
-    const { nombre, email, password, cumple } = req.body;
+    const { nombre, email, password } = req.body;
 
     // Verificar si el usuario ya existe
     const usuarioExistente = await Usuario.findOne({ email });
@@ -54,12 +54,11 @@ router.post('/registro', async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Crear nuevo usuario incluyendo el cumpleaños
+    // Crear nuevo usuario
     const nuevoUsuario = new Usuario({
       nombre,
       email,
       password: hashedPassword,
-      cumple: cumple ? new Date(cumple) : undefined
     });
 
     await nuevoUsuario.save();
@@ -69,8 +68,7 @@ router.post('/registro', async (req, res) => {
       usuario: {
         id: nuevoUsuario._id,
         nombre: nuevoUsuario.nombre,
-        email: nuevoUsuario.email,
-        cumple: nuevoUsuario.cumple
+        email: nuevoUsuario.email
       }
     });
   } catch (error) {
