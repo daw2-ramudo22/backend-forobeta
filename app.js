@@ -24,9 +24,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Rutas
-app.use('/usuarios', require('../routes/usuarios'));
-app.use('/hilos', require('../routes/hilos'));
-app.use('/mensajes', require('../routes/mensajes'));
+app.use('/usuarios', require('./routes/usuarios'));
+app.use('/hilos', require('./routes/hilos'));
+app.use('/mensajes', require('./routes/mensajes'));
 
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI, {
