@@ -122,4 +122,20 @@ router.delete('/eliminar-cuenta', autenticarToken, async (req, res) => {
   }
 });
 
+// Editar cumpleaños
+router.put('/editar-cumple', autenticarToken, async (req, res) => {
+  try {
+    const usuario = await Usuario.findById(req.usuarioId);
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    usuario.cumple = req.body.cumple;
+    await usuario.save();
+
+    res.json({ mensaje: 'Cumpleaños actualizado' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al actualizar cumpleaños' });
+  }
+});
+
+
 module.exports = router;
