@@ -4,9 +4,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
 const autenticarToken = require('../middleware/autenticarToken');
-const API_URL = 'https://backend-forobeta.onrender.com';
-
-
 
 // Login de usuario
 router.post('/login', async (req, res) => {
@@ -45,7 +42,7 @@ router.post('/login', async (req, res) => {
 // Registro de usuario
 router.post('/registro', async (req, res) => {
   try {
-    const { nombre, email, password } = req.body;
+    const { nombre, email, password, cumple } = req.body;
 
     // Verificar si el usuario ya existe
     const usuarioExistente = await Usuario.findOne({ email });
@@ -57,11 +54,12 @@ router.post('/registro', async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Crear nuevo usuario
+    // Crear nuevo usuario incluyendo el cumpleaños
     const nuevoUsuario = new Usuario({
       nombre,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      cumple: cumple ? new Date(cumple) : undefined
     });
 
     await nuevoUsuario.save();
@@ -71,7 +69,8 @@ router.post('/registro', async (req, res) => {
       usuario: {
         id: nuevoUsuario._id,
         nombre: nuevoUsuario.nombre,
-        email: nuevoUsuario.email
+        email: nuevoUsuario.email,
+        cumple: nuevoUsuario.cumple
       }
     });
   } catch (error) {
@@ -86,7 +85,7 @@ router.get('/perfil', autenticarToken, async (req, res) => {
     const usuario = await Usuario.findById(req.usuarioId).select('-password');
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-    console.log('Usuario devuelto:', usuario); // 👈 AGREGA ESTO
+    console.log('Usuario devuelto:', usuario);
 
     res.json(usuario);
   } catch (err) {
@@ -121,6 +120,5 @@ router.delete('/eliminar-cuenta', autenticarToken, async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar la cuenta' });
   }
 });
-
 
 module.exports = router;
