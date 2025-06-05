@@ -3,7 +3,6 @@ const router = express.Router();
 const Hilo = require('../models/Hilo');
 const Mensaje = require('../models/Mensaje');
 const autenticarToken = require('../middleware/autenticarToken');
-const API_URL = 'https://backend-forobeta.onrender.com';
 
 
 // Crear hilo (protegido con autenticación)
@@ -28,7 +27,7 @@ router.post('/', autenticarToken, async (req, res) => {
 // Obtener todos los hilos (ordenados por fecha de creación)
 router.get('/', async (req, res) => {
   try {
-    const hilos = await Hilo.find().lean();
+    const hilos = await Hilo.find().populate('owner').lean();
 
     // Para cada hilo, contar los mensajes relacionados
     const resultados = await Promise.all(
