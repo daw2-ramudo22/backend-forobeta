@@ -12,7 +12,7 @@ const app = express();
 
 //Habilitar CORS correctamente
 app.use(cors({
-  origin: 'https://proyecto-foro-beta-nmbc.vercel.app',
+  origin: 'https://frontend-forobeta.vercel.app',
   credentials: true
 }));
 
