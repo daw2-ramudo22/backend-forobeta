@@ -13,7 +13,7 @@ router.post('/', autenticarToken, async (req, res) => {
       titulo: req.body.titulo,
       mensaje_del_hilo: req.body.mensaje_del_hilo,
       fecha_publicacion: new Date(),
-      owner: req.usuarioId, // 👈 ¡Muy importante!
+      owner: req.usuarioId
     });
 
     await nuevoHilo.save();
