@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Hilo = require('../models/Hilo');
+const Mensaje = require('../models/Mensaje');
 const autenticarToken = require('../middleware/autenticarToken');
 const API_URL = 'https://backend-forobeta.onrender.com';
 
@@ -27,12 +28,23 @@ router.post('/', autenticarToken, async (req, res) => {
 // Obtener todos los hilos (ordenados por fecha de creación)
 router.get('/', async (req, res) => {
   try {
-    const hilos = await Hilo.find()
-      .populate('owner')
-      .sort({ fechaCreacion: -1 });
-    res.json(hilos);
+    const hilos = await Hilo.find().lean();
+
+    // Para cada hilo, contar los mensajes relacionados
+    const resultados = await Promise.all(
+      hilos.map(async hilo => {
+        const cantidadMensajes = await Mensaje.countDocuments({ hilo: hilo._id });
+        return {
+          ...hilo,
+          cantidadMensajes
+        };
+      })
+    );
+
+    res.json(resultados);
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener hilos' });
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener los hilos' });
   }
 });
 
