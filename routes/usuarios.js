@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
 const autenticarToken = require('../middleware/autenticarToken');
-const API_URL = 'https://foro-backend-g0z3.onrender.com';
+const API_URL = 'https://backend-forobeta.onrender.com';
 
 
 

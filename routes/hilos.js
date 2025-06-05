@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Hilo = require('../models/Hilo');
 const autenticarToken = require('../middleware/autenticarToken');
-const API_URL = 'https://foro-backend-g0z3.onrender.com';
+const API_URL = 'https://backend-forobeta.onrender.com';
 
 
 // Crear hilo (protegido con autenticación)

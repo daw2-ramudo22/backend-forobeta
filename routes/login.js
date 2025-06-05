@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
-const API_URL = 'https://foro-backend-g0z3.onrender.com';
+const API_URL = 'https://backend-forobeta.onrender.com';
 
 
 // Login de usuario
