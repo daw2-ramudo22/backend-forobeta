@@ -2,8 +2,6 @@ const express = require('express');
 const router = express.Router();
 const Mensaje = require('../models/Mensaje');
 const autenticarToken = require('../middleware/autenticarToken');
-const API_URL = 'https://backend-forobeta.onrender.com';
-
 
 // Crear mensaje (requiere token)
 router.post('/', autenticarToken, async (req, res) => {
