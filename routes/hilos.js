@@ -5,7 +5,7 @@ const Mensaje = require('../models/Mensaje');
 const autenticarToken = require('../middleware/autenticarToken');
 
 
-// Crear hilo (protegido con autenticación)
+//Crear hilo (protegido con autenticación)
 router.post('/', autenticarToken, async (req, res) => {
   try {
     const nuevoHilo = new Hilo({
@@ -24,7 +24,7 @@ router.post('/', autenticarToken, async (req, res) => {
 
 
 
-// Obtener todos los hilos (ordenados por fecha de creación)
+//Obtener todos los hilos (ordenados por fecha de creación)
 router.get('/', async (req, res) => {
   try {
     const hilos = await Hilo.find().populate('owner').lean();
@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Obtener hilo por ID
+//Obtener hilo por ID
 router.get('/:id', async (req, res) => {
   try {
     const hilo = await Hilo.findById(req.params.id).populate('owner');
@@ -60,7 +60,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Actualizar hilo
+//Actualizar hilo
 router.put('/:id', autenticarToken, async (req, res) => {
   try {
     const hilo = await Hilo.findById(req.params.id);
@@ -80,7 +80,7 @@ router.put('/:id', autenticarToken, async (req, res) => {
   }
 });
 
-// Eliminar hilo
+//Eliminar hilo
 router.delete('/:id', autenticarToken, async (req, res) => {
   try {
     const hilo = await Hilo.findById(req.params.id);

@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
 const autenticarToken = require('../middleware/autenticarToken');
 
-// Login de usuario
+//Login de usuario
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -39,18 +39,18 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Registro de usuario
+//Registro de usuario
 router.post('/registro', async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
 
-    // Verificar si el usuario ya existe
+    //Verificar si el usuario ya existe
     const usuarioExistente = await Usuario.findOne({ email });
     if (usuarioExistente) {
       return res.status(400).json({ error: 'El usuario ya existe' });
     }
 
-    // Hashear la contraseña
+    //Hashear la contraseña
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -77,7 +77,7 @@ router.post('/registro', async (req, res) => {
   }
 });
 
-// Obtener perfil del usuario autenticado
+//Obtener perfil del usuario autenticado
 router.get('/perfil', autenticarToken, async (req, res) => {
   try {
     const usuario = await Usuario.findById(req.usuarioId).select('-password');
@@ -94,7 +94,7 @@ router.get('/perfil', autenticarToken, async (req, res) => {
 
 
 
-// Editar nombre de usuario autenticado
+//Editar nombre de usuario autenticado
 router.put('/editar-nombre', autenticarToken, async (req, res) => {
   try {
     const usuario = await Usuario.findById(req.usuarioId);
@@ -109,7 +109,7 @@ router.put('/editar-nombre', autenticarToken, async (req, res) => {
   }
 });
 
-// Eliminar cuenta del usuario autenticado
+//Eliminar cuenta del usuario autenticado
 router.delete('/eliminar-cuenta', autenticarToken, async (req, res) => {
   try {
     await Usuario.findByIdAndDelete(req.usuarioId);

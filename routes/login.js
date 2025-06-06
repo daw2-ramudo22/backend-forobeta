@@ -6,7 +6,7 @@ const Usuario = require('../models/Usuario');
 const API_URL = 'https://backend-forobeta.onrender.com';
 
 
-// Login de usuario
+//Login de usuario
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -40,22 +40,22 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Registro de usuario
+//Registro de usuario
 router.post('/registro', async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
 
-    // Verificar si el usuario ya existe
+    //Verificar si el usuario ya existe
     const usuarioExistente = await Usuario.findOne({ email });
     if (usuarioExistente) {
       return res.status(400).json({ error: 'El usuario ya existe' });
     }
 
-    // Hashear la contraseña
+    //Hashear la contraseña
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Crear nuevo usuario
+    //Crear nuevo usuario
     const nuevoUsuario = new Usuario({
       nombre,
       email,
@@ -78,7 +78,7 @@ router.post('/registro', async (req, res) => {
   }
 });
 
-// Obtener perfil del usuario (requiere token)
+//Obtener perfil del usuario (requiere token)
 router.get('/perfil', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');

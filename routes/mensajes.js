@@ -3,7 +3,7 @@ const router = express.Router();
 const Mensaje = require('../models/Mensaje');
 const autenticarToken = require('../middleware/autenticarToken');
 
-// Crear mensaje (requiere token)
+//Crear mensaje (requiere token)
 router.post('/', autenticarToken, async (req, res) => {
   try {
     const { texto, hilo } = req.body;
@@ -22,19 +22,19 @@ router.post('/', autenticarToken, async (req, res) => {
   }
 });
 
-// Obtener todos los mensajes (solo para debug o admin)
+//Obtener todos los mensajes
 router.get('/', async (req, res) => {
   const mensajes = await Mensaje.find().populate('autor').populate('hilo');
   res.json(mensajes);
 });
 
-// Obtener mensaje por ID
+//Obtener mensaje por ID
 router.get('/:id', async (req, res) => {
   const mensaje = await Mensaje.findById(req.params.id).populate('autor').populate('hilo');
   res.json(mensaje);
 });
 
-// Obtener mensajes de un hilo
+//Obtener mensajes de un hilo
 router.get('/hilo/:hiloId', async (req, res) => {
   try {
     const mensajes = await Mensaje.find({ hilo: req.params.hiloId })
