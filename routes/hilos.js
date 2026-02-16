@@ -18,7 +18,7 @@ router.post('/', autenticarToken, async (req, res) => {
     await nuevoHilo.save();
     res.status(201).json(nuevoHilo);
   } catch (error) {
-    res.status(500).json({ error: 'Error al crear hiloo' });
+    res.status(500).json({ error: 'Error al crear hilo' });
   }
 });
 
