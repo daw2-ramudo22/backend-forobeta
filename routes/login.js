@@ -3,35 +3,40 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
-const API_URL = 'https://backend-forobeta.onrender.com';
-
 
 //Login de usuario
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    //Buscar usuario y asegurarnos de traer el campo 'role'
     const usuario = await Usuario.findOne({ email });
     if (!usuario) {
       return res.status(401).json({ error: 'Usuario no encontrado' });
     }
 
+    //Verificar contraseña
     const esValido = await bcrypt.compare(password, usuario.password);
     if (!esValido) {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
 
-    const token = jwt.sign({ id: usuario._id }, process.env.JWT_SECRET || '123', {
-      expiresIn: '1d',
-    });
+    //Generar TOKEN incluyendo el ID y el ROLE
+    const token = jwt.sign(
+      { id: usuario._id, role: usuario.role || 'user' }, 
+      process.env.JWT_SECRET || '123', 
+      { expiresIn: '1d' }
+    );
 
+    //Responder con los datos necesarios
     res.json({ 
       mensaje: 'Login correcto', 
       token,
       usuario: {
         id: usuario._id,
         nombre: usuario.nombre,
-        email: usuario.email
+        email: usuario.email,
+        role: usuario.role || 'user'
       }
     });
   } catch (error) {
@@ -45,21 +50,19 @@ router.post('/registro', async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
 
-    //Verificar si el usuario ya existe
     const usuarioExistente = await Usuario.findOne({ email });
     if (usuarioExistente) {
       return res.status(400).json({ error: 'El usuario ya existe' });
     }
 
-    //Hashear la contraseña
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    //Crear nuevo usuario
     const nuevoUsuario = new Usuario({
       nombre,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      role: 'user'
     });
 
     await nuevoUsuario.save();
@@ -69,7 +72,7 @@ router.post('/registro', async (req, res) => {
       usuario: {
         id: nuevoUsuario._id,
         nombre: nuevoUsuario.nombre,
-        email: nuevoUsuario.email
+        role: nuevoUsuario.role
       }
     });
   } catch (error) {
@@ -78,25 +81,20 @@ router.post('/registro', async (req, res) => {
   }
 });
 
-//Obtener perfil del usuario (requiere token)
+//Obtener perfil del usuario
 router.get('/perfil', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
     
-    if (!token) {
-      return res.status(401).json({ error: 'Token no proporcionado' });
-    }
+    if (!token) return res.status(401).json({ error: 'Token no proporcionado' });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || '123');
     const usuario = await Usuario.findById(decoded.id).select('-password');
 
-    if (!usuario) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
 
     res.json(usuario);
   } catch (error) {
-    console.error('Error al obtener perfil:', error);
     res.status(401).json({ error: 'Token inválido' });
   }
 });

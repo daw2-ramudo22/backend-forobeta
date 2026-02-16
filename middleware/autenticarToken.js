@@ -16,10 +16,20 @@ function autenticarToken(req, res, next) {
       return res.status(403).json({ error: 'Token inválido' });
     }
 
-    //Guardamos id del usuario
-    req.usuarioId = usuario.id;
+    //Guardamos el usuario
+    req.usuario = usuario;
     next();
   });
 }
 
+function esAdmin(req, res, next) {
+  //Verificamos si el rol guardado en el token es el admin
+  if (req.usuario && req.usuario.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ error: 'Acceso denegado: Se requieren permisos de administrador' });
+  }
+}
+
+module.exports = { autenticarToken, esAdmin };
 module.exports = autenticarToken;

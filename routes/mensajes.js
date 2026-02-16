@@ -3,7 +3,7 @@ const router = express.Router();
 const Mensaje = require('../models/Mensaje');
 const autenticarToken = require('../middleware/autenticarToken');
 
-//Crear mensaje (requiere token)
+//CREAR MENSAJE
 router.post('/', autenticarToken, async (req, res) => {
   try {
     const { texto, hilo } = req.body;
@@ -11,7 +11,7 @@ router.post('/', autenticarToken, async (req, res) => {
     const mensaje = new Mensaje({
       texto,
       hilo,
-      autor: req.usuarioId,
+      autor: req.usuario.id,
       fecha: new Date()
     });
 
@@ -22,55 +22,68 @@ router.post('/', autenticarToken, async (req, res) => {
   }
 });
 
-//Obtener todos los mensajes
+//OBTENER MENSAJES
 router.get('/', async (req, res) => {
-  const mensajes = await Mensaje.find().populate('autor').populate('hilo');
+  const mensajes = await Mensaje.find().populate('autor', 'nombre').populate('hilo', 'titulo');
   res.json(mensajes);
 });
 
-//Obtener mensaje por ID
-router.get('/:id', async (req, res) => {
-  const mensaje = await Mensaje.findById(req.params.id).populate('autor').populate('hilo');
-  res.json(mensaje);
-});
-
-//Obtener mensajes de un hilo
 router.get('/hilo/:hiloId', async (req, res) => {
   try {
     const mensajes = await Mensaje.find({ hilo: req.params.hiloId })
       .populate('autor', 'nombre')
       .sort({ fecha: 1 });
-
     res.json(mensajes);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener mensajes' });
   }
 });
 
+//ACTUALIZAR MENSAJE
 router.put('/:id', autenticarToken, async (req, res) => {
-  const mensaje = await Mensaje.findById(req.params.id);
+  try {
+    const mensaje = await Mensaje.findById(req.params.id);
 
-  if (!mensaje) return res.status(404).json({ error: 'Mensaje no encontrado' });
-  if (mensaje.autor.toString() !== req.usuarioId) {
-    return res.status(403).json({ error: 'No tienes permiso para editar este mensaje' });
+    if (!mensaje) return res.status(404).json({ error: 'Mensaje no encontrado' });
+
+    const esAutor = mensaje.autor.toString() === req.usuario.id;
+    const esAdmin = req.usuario.role === 'admin';
+
+    if (!esAutor && !esAdmin) {
+      return res.status(403).json({ error: 'No tienes permiso para editar este mensaje' });
+    }
+
+    mensaje.texto = req.body.texto || mensaje.texto;
+    await mensaje.save();
+
+    res.json({ 
+      mensaje: 'Mensaje actualizado', 
+      editadoPor: esAdmin && !esAutor ? 'Admin' : 'Autor' 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al actualizar el mensaje' });
   }
-
-  mensaje.texto = req.body.texto || mensaje.texto;
-  await mensaje.save();
-
-  res.json({ mensaje: 'Mensaje actualizado', mensajeActualizado: mensaje });
 });
 
+//ELIMINAR MENSAJE
 router.delete('/:id', autenticarToken, async (req, res) => {
-  const mensaje = await Mensaje.findById(req.params.id);
+  try {
+    const mensaje = await Mensaje.findById(req.params.id);
 
-  if (!mensaje) return res.status(404).json({ error: 'Mensaje no encontrado' });
-  if (mensaje.autor.toString() !== req.usuarioId) {
-    return res.status(403).json({ error: 'No tienes permiso para borrar este mensaje' });
+    if (!mensaje) return res.status(404).json({ error: 'Mensaje no encontrado' });
+
+    const esAutor = mensaje.autor.toString() === req.usuario.id;
+    const esAdmin = req.usuario.role === 'admin';
+
+    if (!esAutor && !esAdmin) {
+      return res.status(403).json({ error: 'No tienes permiso para borrar este mensaje' });
+    }
+
+    await mensaje.deleteOne();
+    res.json({ mensaje: 'Mensaje eliminado correctamente' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al borrar el mensaje' });
   }
-
-  await mensaje.deleteOne();
-  res.json({ mensaje: 'Mensaje eliminado' });
 });
 
 module.exports = router;

@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const Usuario = require('../models/Usuario');
 const autenticarToken = require('../middleware/autenticarToken');
 
-//Login de usuario
+//LOGIN DE USUARIO
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -20,9 +20,11 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
 
-    const token = jwt.sign({ id: usuario._id }, process.env.JWT_SECRET || '123', {
-      expiresIn: '1d',
-    });
+    const token = jwt.sign(
+      { id: usuario._id, role: usuario.role || 'user' }, 
+      process.env.JWT_SECRET || '123', 
+      { expiresIn: '1d' }
+    );
 
     res.json({ 
       mensaje: 'Login correcto', 
@@ -30,7 +32,8 @@ router.post('/login', async (req, res) => {
       usuario: {
         id: usuario._id,
         nombre: usuario.nombre,
-        email: usuario.email
+        email: usuario.email,
+        role: usuario.role || 'user'
       }
     });
   } catch (error) {
@@ -39,83 +42,92 @@ router.post('/login', async (req, res) => {
   }
 });
 
-//Registro de usuario
+//REGISTRO DE USUARIO
 router.post('/registro', async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
 
-    //Verificar si el usuario ya existe
     const usuarioExistente = await Usuario.findOne({ email });
     if (usuarioExistente) {
       return res.status(400).json({ error: 'El usuario ya existe' });
     }
 
-    //Hashear la contraseña
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Crear nuevo usuario
     const nuevoUsuario = new Usuario({
       nombre,
       email,
       password: hashedPassword,
+      role: 'user'
     });
 
     await nuevoUsuario.save();
 
     res.status(201).json({ 
       mensaje: 'Usuario creado correctamente',
-      usuario: {
-        id: nuevoUsuario._id,
-        nombre: nuevoUsuario.nombre,
-        email: nuevoUsuario.email
-      }
+      usuario: { id: nuevoUsuario._id, nombre: nuevoUsuario.nombre, email: nuevoUsuario.email }
     });
   } catch (error) {
-    console.error('Error en registro:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-//Obtener perfil del usuario autenticado
+//OBTENER PERFIL
 router.get('/perfil', autenticarToken, async (req, res) => {
   try {
-    const usuario = await Usuario.findById(req.usuarioId).select('-password');
+    const usuario = await Usuario.findById(req.usuario.id).select('-password');
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
-
-    console.log('Usuario devuelto:', usuario);
-
     res.json(usuario);
   } catch (err) {
-    console.error('Error al obtener perfil:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-
-
-//Editar nombre de usuario autenticado
-router.put('/editar-nombre', autenticarToken, async (req, res) => {
+//RUTAS DE ADMINISTRACIÓN
+//OBTENER TODOS LOS USUARIOS (Solo Admin)
+router.get('/todos', autenticarToken, async (req, res) => {
+  if (req.usuario.role !== 'admin') {
+    return res.status(403).json({ error: 'Acceso denegado: Se requiere ser administrador' });
+  }
   try {
-    const usuario = await Usuario.findById(req.usuarioId);
-    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
-
-    usuario.nombre = req.body.nombre || usuario.nombre;
-    await usuario.save();
-
-    res.json({ mensaje: 'Nombre actualizado correctamente' });
+    const usuarios = await Usuario.find().select('-password');
+    res.json(usuarios);
   } catch (err) {
-    res.status(500).json({ error: 'Error al actualizar el nombre' });
+    res.status(500).json({ error: 'Error al obtener usuarios' });
   }
 });
 
-//Eliminar cuenta del usuario autenticado
-router.delete('/eliminar-cuenta', autenticarToken, async (req, res) => {
+//EDITAR CUALQUIER USUARIO (Solo Admin)
+router.put('/admin-edit/:id', autenticarToken, async (req, res) => {
+  if (req.usuario.role !== 'admin') {
+    return res.status(403).json({ error: 'Acceso denegado' });
+  }
   try {
-    await Usuario.findByIdAndDelete(req.usuarioId);
-    res.json({ mensaje: 'Cuenta eliminada correctamente' });
+    const usuarioAEditar = await Usuario.findById(req.params.id);
+    if (!usuarioAEditar) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    usuarioAEditar.nombre = req.body.nombre || usuarioAEditar.nombre;
+    usuarioAEditar.email = req.body.email || usuarioAEditar.email;
+    usuarioAEditar.role = req.body.role || usuarioAEditar.role; // El admin puede ascender a otros
+
+    await usuarioAEditar.save();
+    res.json({ mensaje: 'Usuario actualizado por el administrador' });
   } catch (err) {
-    res.status(500).json({ error: 'Error al eliminar la cuenta' });
+    res.status(500).json({ error: 'Error al actualizar usuario' });
+  }
+});
+
+//ELIMINAR CUALQUIER USUARIO (Solo Admin)
+router.delete('/admin-delete/:id', autenticarToken, async (req, res) => {
+  if (req.usuario.role !== 'admin') {
+    return res.status(403).json({ error: 'Acceso denegado' });
+  }
+  try {
+    await Usuario.findByIdAndDelete(req.params.id);
+    res.json({ mensaje: 'Usuario eliminado por el administrador' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar usuario' });
   }
 });
 

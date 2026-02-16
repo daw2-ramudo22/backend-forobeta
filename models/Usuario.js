@@ -5,7 +5,12 @@ const schema = new mongoose.Schema({
   email: { type: String, unique: true },
   cumple: Date,
   fotoperfil: String,
-  password: String
+  password: { type: String, required: true },
+  role: { 
+    type: String, 
+    enum: ['user', 'admin'], 
+    default: 'user' 
+  }
 }, {
   timestamps: true
 });
